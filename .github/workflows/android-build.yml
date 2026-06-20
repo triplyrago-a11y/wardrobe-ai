@@ -1,4 +1,4 @@
-name: Build Android APK From ZIP
+name: Build Android APK
 
 on:
   workflow_dispatch:
@@ -10,7 +10,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Show files
+      - name: Extract ZIP
+        run: unzip "wardrobe-ai (9).zip" -d project
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v3
+
+      - name: Build
         run: |
-          ls -la
-          unzip -l "wardrobe-ai (9).zip" | head -100
+          cd project
+          gradle assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: project/**/app/build/outputs/apk/debug/*.apk
