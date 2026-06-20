@@ -1,0 +1,43 @@
+name: Build Android APK From ZIP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Unzip Project
+        run: |
+          unzip "wardrobe-ai (9).zip" -d project
+
+      - name: Find Android Project
+        run: |
+          find project -name gradlew
+          PROJECT_DIR=$(dirname $(find project -name gradlew | head -n 1))
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Make Gradle Executable
+        run: chmod +x "$PROJECT_DIR/gradlew"
+
+      - name: Build APK
+        run: |
+          cd "$PROJECT_DIR"
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: wardrobe-ai-debug-apk
+          path: |
+            project/**/app/build/outputs/apk/debug/*.apk
